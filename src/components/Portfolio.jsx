@@ -2,6 +2,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend, BarChart, Bar, XAxis, YAxis } from 'recharts';
 import { Wallet, Plus, Trash2, ArrowUpRight, ArrowDownRight, ShieldAlert, CheckCircle2, Upload, Download, Target, FileText, Activity, Landmark, Sparkles, AlertTriangle, ChevronDown, ChevronUp, Edit2, Save } from 'lucide-react';
 import { stockMetadataMap, mutualFundMetadataMap, commodityMetadataMap, cryptoMetadataMap } from '../App';
+import * as XLSX from 'xlsx';
 
 const getMetadataMapForCategory = (category) => {
   switch (category) {
@@ -399,46 +400,114 @@ const Portfolio = ({ user, marketData = {} }) => {
     return { rating: 'Action Required', color: 'var(--danger)', msg: 'High volatility exposure detected. Reallocate proceeds into stable sovereign bonds.' };
   }, [healthScore]);
 
-  // Simulated statement parsing handler
+  // Real statement parsing handler
   const handleStatementUpload = (e) => {
     e.preventDefault();
+    const file = e.target.files ? e.target.files[0] : (e.dataTransfer && e.dataTransfer.files ? e.dataTransfer.files[0] : null);
+    if (!file) return;
+
     setIsUploading(true);
-    setUploadProgress(10);
-    setUploadStatus('Reading uploaded statement metadata...');
+    setUploadProgress(20);
+    setUploadStatus('Reading file data...');
 
-    const interval = setInterval(() => {
-      setUploadProgress(prev => {
-        if (prev >= 90) {
-          clearInterval(interval);
-          setTimeout(() => {
-            // Success simulation injections
-            const importedHoldings = [
-              { id: Date.now() + 1, name: "Infosys Ltd", symbol: "INFY", category: "Equity", sector: "IT Services", quantity: 40, buyPrice: 1450.00, broker: "ZerodhaImport", buyDate: "2025-02-14" },
-              { id: Date.now() + 2, name: "Tata Steel Ltd", symbol: "TATASTEEL", category: "Equity", sector: "Metals", quantity: 150, buyPrice: 142.50, broker: "ZerodhaImport", buyDate: "2025-05-18" },
-              { id: Date.now() + 3, name: "Trent Ltd", symbol: "TRENT", category: "Equity", sector: "Retail", quantity: 12, buyPrice: 2800.00, broker: "ZerodhaImport", buyDate: "2025-11-20" }
-            ];
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      try {
+        setUploadProgress(50);
+        setUploadStatus('Parsing spreadsheet structure...');
+        const data = new Uint8Array(evt.target.result);
+        const workbook = XLSX.read(data, { type: 'array' });
+        
+        const firstSheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[firstSheetName];
+        
+        // Convert to array of objects
+        const jsonRows = XLSX.utils.sheet_to_json(worksheet, { defval: "" });
+        
+        setUploadProgress(75);
+        setUploadStatus('Extracting holdings from rows...');
 
+        const importedHoldings = [];
+
+        jsonRows.forEach((row, index) => {
+          // Find key mapping regardless of case or spaces
+          const findKey = (possibleNames) => {
+            const rowKeys = Object.keys(row);
+            for (let p of possibleNames) {
+              const matchedKey = rowKeys.find(k => k.toLowerCase().replace(/[^a-z0-9]/g, '') === p.toLowerCase().replace(/[^a-z0-9]/g, ''));
+              if (matchedKey) return row[matchedKey];
+            }
+            return null;
+          };
+
+          const rawName = findKey(['Name', 'Asset', 'Fund', 'Stock', 'Scheme', 'Description']) || 'Unknown Asset';
+          const rawSymbol = findKey(['Symbol', 'Ticker', 'ISIN', 'Code']) || rawName.substring(0, 8).toUpperCase();
+          const rawQuantity = findKey(['Quantity', 'Qty', 'Units', 'Balance']) || 0;
+          const rawPrice = findKey(['Price', 'Buy Price', 'Avg Cost', 'Average Cost', 'NAV', 'Cost']) || 0;
+          const rawCategory = findKey(['Category', 'Asset Class', 'Type']);
+          const rawSector = findKey(['Sector', 'Industry']) || 'Diversified';
+          const rawBroker = findKey(['Broker', 'Platform']) || 'Statement Import';
+          const rawDate = findKey(['Date', 'Buy Date', 'Purchase Date']) || new Date().toISOString().split('T')[0];
+
+          // Auto-detect category if missing
+          let parsedCategory = 'Equity';
+          if (rawCategory) parsedCategory = rawCategory;
+          else if (rawName.toLowerCase().includes('fund') || rawName.toLowerCase().includes('etf')) parsedCategory = 'Mutual Funds';
+
+          const numQty = parseFloat(rawQuantity) || 0;
+          const numPrice = parseFloat(rawPrice) || 0;
+
+          if (numQty > 0 || numPrice > 0) {
+            importedHoldings.push({
+              id: Date.now() + index,
+              name: String(rawName).trim(),
+              symbol: String(rawSymbol).trim(),
+              category: parsedCategory,
+              sector: rawSector,
+              quantity: numQty,
+              buyPrice: numPrice,
+              broker: rawBroker,
+              buyDate: String(rawDate)
+            });
+          }
+        });
+
+        setTimeout(() => {
+          if (importedHoldings.length > 0) {
             setHoldings(prevHoldings => {
-              // Avoid duplicates
+              // Simple duplicate prevention based on symbol (can be removed if they want multiple entries per symbol)
               const uniqueImports = importedHoldings.filter(ih => !prevHoldings.some(ph => ph.symbol === ih.symbol));
               return [...prevHoldings, ...uniqueImports];
             });
+            setUploadStatus(`Success! Imported ${importedHoldings.length} assets.`);
+          } else {
+            setUploadStatus('No valid holdings found in the file. Check column headers.');
+          }
 
+          setUploadProgress(100);
+          
+          setTimeout(() => {
             setIsUploading(false);
             setUploadProgress(0);
             setUploadStatus('');
-          }, 800);
-          return 100;
-        }
-        
-        // Progress stage statuses
-        if (prev === 30) setUploadStatus('Decrypting secure statement structure and parsing rows...');
-        if (prev === 60) setUploadStatus('Resolving corporate ISIN mapping with live market values...');
-        if (prev === 80) setUploadStatus('Integrating transaction records directly into local asset table...');
-        
-        return prev + 20;
-      });
-    }, 600);
+          }, 2000);
+        }, 500);
+
+      } catch (err) {
+        console.error("Error parsing file:", err);
+        setUploadStatus('Error reading file. Ensure it is a valid Excel/CSV.');
+        setTimeout(() => setIsUploading(false), 3000);
+      }
+    };
+    reader.onerror = () => {
+      setUploadStatus('Error reading file.');
+      setTimeout(() => setIsUploading(false), 3000);
+    };
+    
+    reader.readAsArrayBuffer(file);
+    
+    // Clear input so same file can be uploaded again if needed
+    if (e.target.value) e.target.value = '';
   };
 
   // Add holding manually
