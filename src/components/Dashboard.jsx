@@ -183,21 +183,51 @@ const Dashboard = ({
     const hour = istTime.getHours();
     const minute = istTime.getMinutes();
     
+    // Format YYYY-MM-DD for holiday checking
+    const yyyy = istTime.getFullYear();
+    const mm = String(istTime.getMonth() + 1).padStart(2, '0');
+    const dd = String(istTime.getDate()).padStart(2, '0');
+    const dateStr = `${yyyy}-${mm}-${dd}`;
+
+    // Static list of NSE Holidays (can be expanded)
+    const holidays = {
+      '2026-01-26': 'Republic Day',
+      '2026-03-03': 'Mahashivratri',
+      '2026-03-24': 'Holi',
+      '2026-04-03': 'Good Friday',
+      '2026-04-14': 'Dr. Ambedkar Jayanti',
+      '2026-05-01': 'Maharashtra Day',
+      '2026-06-26': 'NSE Market Holiday', // Current context date
+      '2026-08-15': 'Independence Day',
+      '2026-10-02': 'Mahatma Gandhi Jayanti',
+      '2026-11-09': 'Diwali',
+      '2026-12-25': 'Christmas'
+    };
+    
+    const holidayReason = holidays[dateStr];
+    
     const timeInMinutes = hour * 60 + minute;
     const openMinutes = 9 * 60 + 15; // 09:15
     const closeMinutes = 15 * 60 + 30; // 15:30
     
     const isWeekday = day >= 1 && day <= 5;
-    const isOpen = isWeekday && (timeInMinutes >= openMinutes && timeInMinutes < closeMinutes);
-    
+    let isOpen = isWeekday && (timeInMinutes >= openMinutes && timeInMinutes < closeMinutes);
     let labelText = '';
-    if (isOpen) {
+    
+    if (holidayReason) {
+      isOpen = false;
+      labelText = `Holiday: ${holidayReason}`;
+    } else if (!isWeekday) {
+      labelText = 'Weekend';
+    } else if (isOpen) {
       const remaining = closeMinutes - timeInMinutes;
       const h = Math.floor(remaining / 60);
       const m = remaining % 60;
       labelText = `Closes in ${h}h ${m}m`;
+    } else if (timeInMinutes < openMinutes) {
+      labelText = 'Opens at 09:15 AM';
     } else {
-      labelText = "Closed";
+      labelText = 'Closed for the day';
     }
     
     return { isOpen, labelText };
