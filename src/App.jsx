@@ -429,6 +429,8 @@ function App() {
         ]);
         setIsCachedData(true);
         setMarketError(false);
+        setFeedStatus('connected');
+        setApiHealth(prev => ({ ...prev, failedRequests: 0 }));
       }
 
       setMarketLoading(false);
