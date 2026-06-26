@@ -205,32 +205,61 @@ const Dashboard = ({
     };
     
     const holidayReason = holidays[dateStr];
-    
-    const timeInMinutes = hour * 60 + minute;
-    const openMinutes = 9 * 60 + 15; // 09:15
-    const closeMinutes = 15 * 60 + 30; // 15:30
-    
     const isWeekday = day >= 1 && day <= 5;
-    let isOpen = isWeekday && (timeInMinutes >= openMinutes && timeInMinutes < closeMinutes);
-    let labelText = '';
+    
+    // Equity (NSE) Logic
+    const eqOpenMinutes = 9 * 60 + 15; // 09:15
+    const eqCloseMinutes = 15 * 60 + 30; // 15:30
+    const timeInMinutes = hour * 60 + minute;
+    
+    let eqIsOpen = isWeekday && (timeInMinutes >= eqOpenMinutes && timeInMinutes < eqCloseMinutes);
+    let eqLabelText = '';
     
     if (holidayReason) {
-      isOpen = false;
-      labelText = `Holiday: ${holidayReason}`;
+      eqIsOpen = false;
+      eqLabelText = `Holiday: ${holidayReason}`;
     } else if (!isWeekday) {
-      labelText = 'Weekend';
-    } else if (isOpen) {
-      const remaining = closeMinutes - timeInMinutes;
+      eqLabelText = 'Weekend';
+    } else if (eqIsOpen) {
+      const remaining = eqCloseMinutes - timeInMinutes;
       const h = Math.floor(remaining / 60);
       const m = remaining % 60;
-      labelText = `Closes in ${h}h ${m}m`;
-    } else if (timeInMinutes < openMinutes) {
-      labelText = 'Opens at 09:15 AM';
+      eqLabelText = `Closes in ${h}h ${m}m`;
+    } else if (timeInMinutes < eqOpenMinutes) {
+      eqLabelText = 'Opens at 09:15 AM';
     } else {
-      labelText = 'Closed for the day';
+      eqLabelText = 'Closed for the day';
     }
     
-    return { isOpen, labelText };
+    // Commodity (MCX) Logic (Usually 9:00 AM to 11:30 PM/11:55 PM, open on some NSE holidays)
+    const commOpenMinutes = 9 * 60; // 09:00
+    const commCloseMinutes = 23 * 60 + 30; // 23:30
+    let commIsOpen = isWeekday && (timeInMinutes >= commOpenMinutes && timeInMinutes < commCloseMinutes);
+    let commLabelText = '';
+    
+    // Some major national holidays MCX is closed fully, else open for evening session
+    const isNationalHoliday = ['2026-01-26', '2026-08-15', '2026-10-02'].includes(dateStr);
+    
+    if (isNationalHoliday) {
+      commIsOpen = false;
+      commLabelText = `Holiday: ${holidayReason}`;
+    } else if (!isWeekday) {
+      commLabelText = 'Weekend';
+    } else if (commIsOpen) {
+      const remaining = commCloseMinutes - timeInMinutes;
+      const h = Math.floor(remaining / 60);
+      const m = remaining % 60;
+      commLabelText = `Closes in ${h}h ${m}m`;
+    } else if (timeInMinutes < commOpenMinutes) {
+      commLabelText = 'Opens at 09:00 AM';
+    } else {
+      commLabelText = 'Closed for the day';
+    }
+    
+    return { 
+      equity: { isOpen: eqIsOpen, labelText: eqLabelText },
+      commodity: { isOpen: commIsOpen, labelText: commLabelText }
+    };
   };
 
   const marketClock = getMarketClockStatus();
@@ -588,20 +617,45 @@ const Dashboard = ({
         </div>
 
         {/* Market Hours Indicator */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <Clock size={16} color="var(--text-light)" />
-          <span style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-main)', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-            {marketClock.isOpen ? (
-              <>
-                <span style={{ color: 'var(--success)' }}>🟢 Market Open</span> 
-                <span style={{ color: 'var(--text-light)', fontWeight: 500 }}>({marketClock.labelText})</span>
-              </>
-            ) : (
-              <>
-                <span style={{ color: 'var(--danger)' }}>🔴 Market Closed</span>
-              </>
-            )}
-          </span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          
+          {/* Equity */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+            <Clock size={16} color="var(--text-light)" />
+            <span style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-main)', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+              <span style={{ color: 'var(--text-secondary)', marginRight: '2px', fontSize: '0.75rem', textTransform: 'uppercase' }}>Equity:</span>
+              {marketClock.equity.isOpen ? (
+                <>
+                  <span style={{ color: 'var(--success)' }}>🟢 Open</span> 
+                  <span style={{ color: 'var(--text-light)', fontWeight: 500 }}>({marketClock.equity.labelText})</span>
+                </>
+              ) : (
+                <>
+                  <span style={{ color: 'var(--danger)' }}>🔴 Closed</span>
+                  <span style={{ color: 'var(--text-light)', fontWeight: 500 }}>({marketClock.equity.labelText})</span>
+                </>
+              )}
+            </span>
+          </div>
+
+          {/* Commodity */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', borderLeft: '1px solid rgba(0,0,0,0.1)', paddingLeft: '0.75rem' }}>
+            <span style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-main)', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+              <span style={{ color: 'var(--text-secondary)', marginRight: '2px', fontSize: '0.75rem', textTransform: 'uppercase' }}>MCX:</span>
+              {marketClock.commodity.isOpen ? (
+                <>
+                  <span style={{ color: 'var(--success)' }}>🟢 Open</span> 
+                  <span style={{ color: 'var(--text-light)', fontWeight: 500 }}>({marketClock.commodity.labelText})</span>
+                </>
+              ) : (
+                <>
+                  <span style={{ color: 'var(--danger)' }}>🔴 Closed</span>
+                  <span style={{ color: 'var(--text-light)', fontWeight: 500 }}>({marketClock.commodity.labelText})</span>
+                </>
+              )}
+            </span>
+          </div>
+          
         </div>
       </div>
 
