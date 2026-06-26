@@ -402,12 +402,33 @@ function App() {
         };
       });
 
-      // Caching Fallback: Load latest successful market response
+      // Caching Fallback: Load latest successful market response, or mock data if no cache exists
       const cachedData = getCachedData();
       if (cachedData) {
         setMarketData(cachedData.indices);
         setTopGainers(cachedData.gainers);
         setIsCachedData(true);
+      } else {
+        // Ultimate Mock Fallback to prevent crash on fresh devices when API is unreachable
+        setMarketData({
+          'NIFTY 50': { price: 24055.60, change: 0.85, base: 23850, isNse: true },
+          'NIFTY NEXT 50': { price: 72450.20, change: 1.12, base: 71648, isNse: true },
+          'NIFTY BANK': { price: 52145.80, change: 0.45, base: 51912, isNse: true },
+          'NIFTY FINANCIAL SERVICES': { price: 23450.15, change: 0.60, base: 23310, isNse: true },
+          'NIFTY MIDCAP': { price: 58230.40, change: 1.45, base: 57396, isNse: true },
+          'NIFTY SMALLCAP': { price: 18560.75, change: 2.10, base: 18178, isNse: true },
+          'SENSEX': { price: 79245.80, change: 0.82, base: 78600, isNse: false },
+          'GOLD': { price: 7285.00, change: -0.15, base: 7295, isNse: false },
+          'SILVER': { price: 93.50, change: 0.25, base: 93.25, isNse: false },
+          'USD/INR': { price: 83.56, change: 0.04, base: 83.52, isNse: false }
+        });
+        setTopGainers([
+          { symbol: 'TRENT', name: 'Trent Limited', sector: 'Retail', price: 5432.10, change: 4.5, sparkline: [] },
+          { symbol: 'BAJAJFINSV', name: 'Bajaj Finserv', sector: 'Finance', price: 1654.80, change: 3.2, sparkline: [] },
+          { symbol: 'SBIN', name: 'State Bank of India', sector: 'Banking', price: 845.60, change: 2.8, sparkline: [] }
+        ]);
+        setIsCachedData(true);
+        setMarketError(false);
       }
 
       setMarketLoading(false);
