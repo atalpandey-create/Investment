@@ -27,29 +27,29 @@ const initialGoals = [
   { id: 2, name: "House down payment", targetAmount: 2500000, currentSaved: 120000, targetYear: 2030, category: "Mutual Funds" }
 ];
 
-const Portfolio = ({ marketData = {} }) => {
+const Portfolio = ({ user, marketData = {} }) => {
   const [activeSubTab, setActiveSubTab] = useState('ledger'); // 'ledger', 'diagnostics', 'goals', 'coach'
   const [holdings, setHoldings] = useState(() => {
     try {
-      const cached = localStorage.getItem('Prefin_holdings');
-      return cached ? JSON.parse(cached) : initialDefaultHoldings;
+      const cached = localStorage.getItem(`Prefin_holdings_${user?.id || 'default'}`);
+      return cached ? JSON.parse(cached) : [];
     } catch (e) {
-      return initialDefaultHoldings;
+      return [];
     }
   });
 
   const [goals, setGoals] = useState(() => {
     try {
-      const cached = localStorage.getItem('Prefin_goals');
-      return cached ? JSON.parse(cached) : initialGoals;
+      const cached = localStorage.getItem(`Prefin_goals_${user?.id || 'default'}`);
+      return cached ? JSON.parse(cached) : [];
     } catch (e) {
-      return initialGoals;
+      return [];
     }
   });
 
   const [purchaseLotsHistory, setPurchaseLotsHistory] = useState(() => {
     try {
-      const cached = localStorage.getItem('Prefin_purchase_lots');
+      const cached = localStorage.getItem(`Prefin_purchase_lots_${user?.id || 'default'}`);
       return cached ? JSON.parse(cached) : [];
     } catch (e) {
       return [];
@@ -58,7 +58,7 @@ const Portfolio = ({ marketData = {} }) => {
 
   const [salesHistory, setSalesHistory] = useState(() => {
     try {
-      const cached = localStorage.getItem('Prefin_sales_history');
+      const cached = localStorage.getItem(`Prefin_sales_history_${user?.id || 'default'}`);
       return cached ? JSON.parse(cached) : [];
     } catch (e) {
       return [];
@@ -84,16 +84,16 @@ const Portfolio = ({ marketData = {} }) => {
   const [lots, setLots] = useState([{ id: Date.now(), date: '', quantity: '', price: '' }]);
 
   useEffect(() => {
-    localStorage.setItem('Prefin_holdings', JSON.stringify(holdings));
-  }, [holdings]);
+    localStorage.setItem(`Prefin_holdings_${user?.id || 'default'}`, JSON.stringify(holdings));
+  }, [holdings, user]);
 
   useEffect(() => {
-    localStorage.setItem('Prefin_purchase_lots', JSON.stringify(purchaseLotsHistory));
-  }, [purchaseLotsHistory]);
+    localStorage.setItem(`Prefin_purchase_lots_${user?.id || 'default'}`, JSON.stringify(purchaseLotsHistory));
+  }, [purchaseLotsHistory, user]);
 
   useEffect(() => {
-    localStorage.setItem('Prefin_sales_history', JSON.stringify(salesHistory));
-  }, [salesHistory]);
+    localStorage.setItem(`Prefin_sales_history_${user?.id || 'default'}`, JSON.stringify(salesHistory));
+  }, [salesHistory, user]);
 
   const generateMockHistoricalPrice = (symbol, dateStr) => {
     if (!symbol || !dateStr) return '';
@@ -237,16 +237,16 @@ const Portfolio = ({ marketData = {} }) => {
 
   // Persist State Updates
   useEffect(() => {
-    localStorage.setItem('Prefin_holdings', JSON.stringify(holdings));
-  }, [holdings]);
+    localStorage.setItem(`Prefin_holdings_${user?.id || 'default'}`, JSON.stringify(holdings));
+  }, [holdings, user]);
 
   useEffect(() => {
-    localStorage.setItem('Prefin_goals', JSON.stringify(goals));
-  }, [goals]);
+    localStorage.setItem(`Prefin_goals_${user?.id || 'default'}`, JSON.stringify(goals));
+  }, [goals, user]);
 
   useEffect(() => {
-    localStorage.setItem('Prefin_purchase_lots', JSON.stringify(purchaseLotsHistory));
-  }, [purchaseLotsHistory]);
+    localStorage.setItem(`Prefin_purchase_lots_${user?.id || 'default'}`, JSON.stringify(purchaseLotsHistory));
+  }, [purchaseLotsHistory, user]);
 
   // Resolve Live Prices & Metric Calculations
   const processedHoldings = useMemo(() => {

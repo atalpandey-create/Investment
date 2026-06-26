@@ -12,10 +12,10 @@ const initialDefaultHoldings = [
   { id: 5, name: "Bitcoin", symbol: "BTC/USD", category: "Cryptocurrency", sector: "Crypto", quantity: 0.15, buyPrice: 4800000.00, broker: "CoinDCX", buyDate: "2025-04-05" }
 ];
 
-const PortfolioDoctor = ({ marketData = {} }) => {
+const PortfolioDoctor = ({ user, marketData = {} }) => {
   const [holdings, setHoldings] = useState(() => {
     try {
-      const cached = localStorage.getItem('Prefin_holdings');
+      const cached = localStorage.getItem(`Prefin_holdings_${user?.id || 'default'}`);
       return cached ? JSON.parse(cached) : [];
     } catch (e) {
       return [];
@@ -26,7 +26,7 @@ const PortfolioDoctor = ({ marketData = {} }) => {
   useEffect(() => {
     const handleStorageChange = () => {
       try {
-        const cached = localStorage.getItem('Prefin_holdings');
+        const cached = localStorage.getItem(`Prefin_holdings_${user?.id || 'default'}`);
         if (cached) setHoldings(JSON.parse(cached));
       } catch (e) {
         console.error("Failed to sync holdings in doctor:", e);
@@ -34,11 +34,11 @@ const PortfolioDoctor = ({ marketData = {} }) => {
     };
     window.addEventListener('storage', handleStorageChange);
     return () => window.removeEventListener('storage', handleStorageChange);
-  }, []);
+  }, [user]);
 
   const handleLoadDemo = () => {
     setHoldings(initialDefaultHoldings);
-    localStorage.setItem('Prefin_holdings', JSON.stringify(initialDefaultHoldings));
+    localStorage.setItem(`Prefin_holdings_${user?.id || 'default'}`, JSON.stringify(initialDefaultHoldings));
   };
 
   // Resolve Live Prices & Metric Calculations

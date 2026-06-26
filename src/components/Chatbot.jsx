@@ -117,13 +117,8 @@ ${suggestedAction}${disclaimer}`;
   if (query.includes('portfolio') || query.includes('ledger') || query.includes('holding') || query.includes('allocation') || query.includes('diversif') || query.includes('diagnos')) {
     let holdings = [];
     try {
-      const cached = localStorage.getItem('Prefin_holdings');
-      holdings = cached ? JSON.parse(cached) : [
-        { id: 1, name: "Reliance Industries", category: "Equity", invested: 40000, current: 48200 },
-        { id: 2, name: "Parag Parikh Flexi Cap", category: "Mutual Funds", invested: 30000, current: 36900 },
-        { id: 3, name: "Gold ETF", category: "Commodities", invested: 15000, current: 18450 },
-        { id: 4, name: "Bitcoin", category: "Cryptocurrency", invested: 10000, current: 9400 }
-      ];
+      const cached = localStorage.getItem(`Prefin_holdings_${user?.id || 'default'}`);
+      holdings = cached ? JSON.parse(cached) : [];
     } catch (e) {
       holdings = [];
     }

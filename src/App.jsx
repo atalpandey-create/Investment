@@ -125,6 +125,7 @@ function App() {
   const { signOut } = useClerk();
 
   const user = isSignedIn && clerkUser ? {
+    id: clerkUser.id,
     name: clerkUser.fullName || clerkUser.firstName || clerkUser.username || 'Investor',
     email: clerkUser.primaryEmailAddress?.emailAddress || '',
     avatarText: clerkUser.firstName ? clerkUser.firstName[0] : 'U',
@@ -489,10 +490,10 @@ function App() {
       case 'recommendations':
         return <AiRecommendations onSelectPreset={handleSelectPreset} />;
       case 'calculator':
-        return <WealthCalculator inputs={inputs} onInputChange={handleInputChange} marketData={marketData} />;
+        return <WealthCalculator key={user?.id || 'default'} user={user} inputs={inputs} onInputChange={handleInputChange} marketData={marketData} />;
       case 'portfolio':
         return user ? (
-          <Portfolio marketData={marketData} />
+          <Portfolio key={user.id} user={user} marketData={marketData} />
         ) : (
           <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh', padding: '2rem' }}>
             <SignIn routing="hash" />
@@ -502,7 +503,7 @@ function App() {
         return <Alerts marketData={marketData} alerts={alerts} setAlerts={setAlerts} />;
       case 'doctor':
         return user ? (
-          <PortfolioDoctor marketData={marketData} />
+          <PortfolioDoctor key={user.id} user={user} marketData={marketData} />
         ) : (
           <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh', padding: '2rem' }}>
             <SignIn routing="hash" />
@@ -524,7 +525,7 @@ function App() {
       <Footer setActiveTab={setActiveTab} />
       
       {/* Advisor Chatbot Panel */}
-      <Chatbot marketData={marketData} topGainers={topGainers} setActiveTab={setActiveTab} user={user} />
+      <Chatbot key={user?.id || 'default'} marketData={marketData} topGainers={topGainers} setActiveTab={setActiveTab} user={user} />
 
       {/* Floating Smart Toast Alerts */}
       {toastAlert && (

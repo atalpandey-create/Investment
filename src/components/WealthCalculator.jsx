@@ -94,7 +94,7 @@ const calculateYearByYear = (inputs) => {
   };
 };
 
-const WealthCalculator = ({ inputs, onInputChange, marketData }) => {
+const WealthCalculator = ({ user, inputs, onInputChange, marketData }) => {
   const { results, chartData } = useMemo(() => calculateYearByYear(inputs), [inputs]);
 
   const getAssetPrice = (ticker) => {
@@ -125,18 +125,12 @@ const WealthCalculator = ({ inputs, onInputChange, marketData }) => {
   const [addedToPortfolio, setAddedToPortfolio] = React.useState(false);
 
   const handleAddToPortfolio = () => {
-    let holdings = JSON.parse(localStorage.getItem('Prefin_holdings') || 'null');
+    let holdings = JSON.parse(localStorage.getItem(`Prefin_holdings_${user?.id || 'default'}`) || 'null');
     if (!holdings) {
-      holdings = [
-        { id: 1, name: "Reliance Industries", symbol: "RELIANCE", category: "Equity", sector: "Conglomerate", quantity: 15, buyPrice: 2380.00, broker: "Zerodha", buyDate: "2025-06-12" },
-        { id: 2, name: "HDFC Bank Ltd", symbol: "HDFCBANK", category: "Equity", sector: "Banking", quantity: 30, buyPrice: 1500.00, broker: "Groww", buyDate: "2025-08-15" },
-        { id: 3, name: "Parag Parikh Flexi Cap", symbol: "PPFLEXI", category: "Mutual Funds", sector: "Diversified", quantity: 1, buyPrice: 30000.00, broker: "Direct", buyDate: "2024-12-10" },
-        { id: 4, name: "Gold ETF Bees", symbol: "GOLD", category: "Commodities", sector: "Gold", quantity: 50, buyPrice: 5000.00, broker: "Zerodha", buyDate: "2025-01-20" },
-        { id: 5, name: "Bitcoin", symbol: "BTC/USD", category: "Cryptocurrency", sector: "Crypto", quantity: 0.15, buyPrice: 4800000.00, broker: "CoinDCX", buyDate: "2025-04-05" }
-      ];
+      holdings = [];
     }
     
-    let purchaseLots = JSON.parse(localStorage.getItem('Prefin_purchase_lots') || '[]');
+    let purchaseLots = JSON.parse(localStorage.getItem(`Prefin_purchase_lots_${user?.id || 'default'}`) || '[]');
 
     const newId = Date.now();
     
@@ -168,8 +162,8 @@ const WealthCalculator = ({ inputs, onInputChange, marketData }) => {
     };
     purchaseLots.push(newLot);
 
-    localStorage.setItem('Prefin_holdings', JSON.stringify(holdings));
-    localStorage.setItem('Prefin_purchase_lots', JSON.stringify(purchaseLots));
+    localStorage.setItem(`Prefin_holdings_${user?.id || 'default'}`, JSON.stringify(holdings));
+    localStorage.setItem(`Prefin_purchase_lots_${user?.id || 'default'}`, JSON.stringify(purchaseLots));
 
     setAddedToPortfolio(true);
     setTimeout(() => setAddedToPortfolio(false), 3000);
