@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useUser, useClerk, SignedIn, SignedOut, SignIn } from '@clerk/clerk-react';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import Dashboard from './components/Dashboard';
@@ -9,7 +10,6 @@ import Portfolio from './components/Portfolio';
 import Alerts from './components/Alerts';
 import Chatbot from './components/Chatbot';
 import PortfolioDoctor from './components/PortfolioDoctor';
-import AuthGate from './components/AuthGate';
 import { Bell } from 'lucide-react';
 
 export const stockMetadataMap = {
@@ -98,25 +98,19 @@ export const commodityMetadataMap = {
   'NATURALGAS': { name: 'Natural Gas', sector: 'Energy', unit: '₹/mmBtu', livePrice: 195.80 },
   'COPPER': { name: 'Copper', sector: 'Base Metals', unit: '₹/kg', livePrice: 820.50 },
   'ALUMINIUM': { name: 'Aluminium', sector: 'Base Metals', unit: '₹/kg', livePrice: 218.60 },
-  'ZINC': { name: 'Zinc', sector: 'Base Metals', unit: '₹/kg', livePrice: 252.30 },
-  'NICKEL': { name: 'Nickel', sector: 'Base Metals', unit: '₹/kg', livePrice: 1540.00 },
-  'COTTON': { name: 'Cotton', sector: 'Agriculture', unit: '₹/bale', livePrice: 56200.00 },
-  'SOYBEAN': { name: 'Soybean', sector: 'Agriculture', unit: '₹/quintal', livePrice: 4850.00 },
-  'WHEAT': { name: 'Wheat', sector: 'Agriculture', unit: '₹/quintal', livePrice: 2520.00 },
-  'PLATINUM': { name: 'Platinum', sector: 'Precious Metals', unit: '₹/gram', livePrice: 2950.00 },
-  'PALLADIUM': { name: 'Palladium', sector: 'Precious Metals', unit: '₹/gram', livePrice: 2780.00 },
-  'LEAD': { name: 'Lead', sector: 'Base Metals', unit: '₹/kg', livePrice: 182.40 },
-  'MENTHAOIL': { name: 'Mentha Oil', sector: 'Agriculture', unit: '₹/kg', livePrice: 960.00 }
+  'ZINC': { name: 'Zinc', sector: 'Base Metals', unit: '₹/kg', livePrice: 245.30 },
+  'LEAD': { name: 'Lead', sector: 'Base Metals', unit: '₹/kg', livePrice: 188.75 }
 };
 
 export const cryptoMetadataMap = {
-  'BTC': { name: 'Bitcoin', sector: 'Crypto', livePrice: 5825000 },
+  'BTC': { name: 'Bitcoin', sector: 'Crypto', livePrice: 5840000 },
   'ETH': { name: 'Ethereum', sector: 'Crypto', livePrice: 315000 },
-  'BNB': { name: 'Binance Coin', sector: 'Crypto', livePrice: 52800 },
-  'SOL': { name: 'Solana', sector: 'Crypto', livePrice: 14500 },
-  'XRP': { name: 'Ripple (XRP)', sector: 'Crypto', livePrice: 192 },
-  'ADA': { name: 'Cardano', sector: 'Crypto', livePrice: 62.50 },
-  'DOGE': { name: 'Dogecoin', sector: 'Crypto', livePrice: 25.40 },
+  'USDT': { name: 'Tether', sector: 'Crypto', livePrice: 83.50 },
+  'BNB': { name: 'BNB', sector: 'Crypto', livePrice: 48200 },
+  'SOL': { name: 'Solana', sector: 'Crypto', livePrice: 12500 },
+  'XRP': { name: 'XRP', sector: 'Crypto', livePrice: 52.40 },
+  'USDC': { name: 'USD Coin', sector: 'Crypto', livePrice: 83.48 },
+  'ADA': { name: 'Cardano', sector: 'Crypto', livePrice: 45.80 },
   'AVAX': { name: 'Avalanche', sector: 'Crypto', livePrice: 3580 },
   'DOT': { name: 'Polkadot', sector: 'Crypto', livePrice: 680 },
   'MATIC': { name: 'Polygon (MATIC)', sector: 'Crypto', livePrice: 85.20 },
@@ -126,20 +120,20 @@ export const cryptoMetadataMap = {
 
 function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
-  const [user, setUser] = useState(() => {
-    try {
-      const cachedSession = localStorage.getItem('Prefin_user_session');
-      return cachedSession ? JSON.parse(cachedSession) : null;
-    } catch (e) {
-      console.error('Failed to load user session:', e);
-      return null;
-    }
-  });
+  
+  const { isSignedIn, user: clerkUser } = useUser();
+  const { signOut } = useClerk();
+
+  const user = isSignedIn && clerkUser ? {
+    name: clerkUser.fullName || clerkUser.firstName || clerkUser.username || 'Investor',
+    email: clerkUser.primaryEmailAddress?.emailAddress || '',
+    avatarText: clerkUser.firstName ? clerkUser.firstName[0] : 'U',
+    imageUrl: clerkUser.imageUrl
+  } : null;
 
   const handleLogout = () => {
-    setUser(null);
-    localStorage.removeItem('Prefin_user_session');
-    setToastAlert({ title: "Logged Out", message: "You have been successfully logged out from Prefin." });
+    signOut();
+    setToastAlert({ title: "Logged Out", message: "You have been securely logged out via Clerk." });
   };
 
   const [inputs, setInputs] = useState({
@@ -500,7 +494,9 @@ function App() {
         return user ? (
           <Portfolio marketData={marketData} />
         ) : (
-          <AuthGate onLoginSuccess={(userData) => { setUser(userData); localStorage.setItem('Prefin_user_session', JSON.stringify(userData)); setToastAlert({ title: "Welcome to Prefin", message: `Signed in as ${userData.name}. Portfolio Console is now active.` }); }} />
+          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh', padding: '2rem' }}>
+            <SignIn routing="hash" />
+          </div>
         );
       case 'alerts':
         return <Alerts marketData={marketData} alerts={alerts} setAlerts={setAlerts} />;
@@ -508,7 +504,9 @@ function App() {
         return user ? (
           <PortfolioDoctor marketData={marketData} />
         ) : (
-          <AuthGate onLoginSuccess={(userData) => { setUser(userData); localStorage.setItem('Prefin_user_session', JSON.stringify(userData)); setToastAlert({ title: "Welcome to Prefin", message: `Signed in as ${userData.name}. AI Portfolio Doctor is now active.` }); }} />
+          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh', padding: '2rem' }}>
+            <SignIn routing="hash" />
+          </div>
         );
       default:
         return null;
