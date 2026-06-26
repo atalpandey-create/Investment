@@ -895,7 +895,14 @@ const Portfolio = ({ user, marketData = {} }) => {
               </h3>
               
               <div 
-                onClick={(e) => handleStatementUpload(e)}
+                onClick={() => document.getElementById('broker-statement-upload').click()}
+                onDragOver={(e) => e.preventDefault()}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                    handleStatementUpload(e);
+                  }
+                }}
                 style={{
                   border: '2px dashed rgba(37,99,235,0.18)',
                   background: 'rgba(37,99,235,0.02)',
@@ -914,6 +921,17 @@ const Portfolio = ({ user, marketData = {} }) => {
                   e.currentTarget.style.borderColor = 'rgba(37,99,235,0.18)';
                 }}
               >
+                <input 
+                  type="file" 
+                  id="broker-statement-upload" 
+                  accept=".pdf,.xlsx,.xls,.csv" 
+                  style={{ display: 'none' }} 
+                  onChange={(e) => {
+                    if (e.target.files && e.target.files.length > 0) {
+                      handleStatementUpload(e);
+                    }
+                  }} 
+                />
                 <Upload size={32} color="var(--primary)" style={{ margin: '0 auto 0.75rem auto' }} className="float-3d" />
                 <h4 style={{ fontSize: '0.88rem', fontWeight: 800, color: 'var(--text-main)', margin: '0 0 0.25rem 0' }}>
                   Drag & Drop Broker Statements
