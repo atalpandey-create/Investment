@@ -170,6 +170,7 @@ const Dashboard = ({
   const [expandedGainer, setExpandedGainer] = useState(null);
   const [expandedMomentum, setExpandedMomentum] = useState(null);
   const [expandedPick, setExpandedPick] = useState(null);
+  const [expandedBond, setExpandedBond] = useState(null);
   const [picksSearchQuery, setPicksSearchQuery] = useState('');
   const [activeMomentumTab, setActiveMomentumTab] = useState('Stocks');
 
@@ -1339,6 +1340,92 @@ const Dashboard = ({
                 ) : (
                   <span style={{ color: 'var(--primary)', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
                     <Bot size={14} /> View AI Recommendation
+                  </span>
+                )}
+              </div>
+            </div>
+          )})}
+        </div>
+      </section>
+
+      {/* Fixed Income & Bonds Section */}
+      <section className="wealth-card" style={{ padding: '2rem 1.5rem', background: '#ffffff', border: '1px solid var(--border-light)', marginTop: '2.5rem' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1.5rem', marginBottom: '1.5rem' }}>
+          <div>
+            <h3 style={{ fontSize: '1.2rem', color: 'var(--text-main)', margin: '0 0 0.5rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <Landmark size={20} color="#8b5cf6" />
+              Fixed Income & Bonds
+            </h3>
+            <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-light)', fontWeight: 500 }}>
+              Secure your portfolio with sovereign and high-yield corporate debt instruments.
+            </p>
+          </div>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.25rem' }}>
+          {[
+            { name: "Sovereign Gold Bonds (SGB)", category: "Commodity Debt", cagr: "8-10%", risk: "Low", thesis: "SGBs track the capital appreciation of gold while paying an additional 2.5% annual interest. Crucially, if held to maturity, all capital gains are completely tax-free.", score: 94, holdings: [{company: "Reserve Bank of India", share: "100.0%"}] },
+            { name: "RBI Floating Rate Bonds", category: "Sovereign Debt", cagr: "8.05%", risk: "Very Low", thesis: "Interest rate adjusts dynamically (pegged 0.35% above the NSC rate). Backed by a 100% sovereign guarantee, they offer zero default risk and superior inflation hedging.", score: 91, holdings: [{company: "Government of India", share: "100.0%"}] },
+            { name: "Power Finance Corp NCDs", category: "Corporate Bond", cagr: "8.2%", risk: "Low-Moderate", thesis: "These Non-Convertible Debentures offer yields significantly higher than bank FDs while maintaining a AAA safety rating. PFC provides stable monthly/annual payout.", score: 86, holdings: [{company: "Power Finance Corporation Ltd.", share: "100.0%"}] },
+            { name: "NHAI Tax-Free Bonds", category: "Govt Debt", cagr: "7.2-7.5%", risk: "Low", thesis: "Interest is completely tax-free under section 10(15)(iv)(h) of the Income Tax Act. Highly beneficial for investors in the highest tax bracket.", score: 88, holdings: [{company: "NHAI", share: "100.0%"}] },
+            { name: "Shriram Finance NCDs", category: "High-Yield Corporate Bond", cagr: "8.8-9.1%", risk: "Moderate", thesis: "High-yield corporate bond from a leading NBFC. Ideal for investors seeking higher fixed income than FDs with marginally elevated risk.", score: 84, holdings: [{company: "Shriram Finance Ltd.", share: "100.0%"}] },
+            { name: "ICICI Prudential Corporate Bond Fund", category: "Debt Mutual Fund", cagr: "7.5-8.0%", risk: "Low-Moderate", thesis: "Invests minimum 80% in AAA rated corporate bonds. Highly liquid and provides steady returns with lower volatility compared to equity or credit risk funds.", score: 87, holdings: [{company: "HDFC Bank Bonds", share: "8.5%"}, {company: "NABARD Bonds", share: "7.2%"}] }
+          ].map((bond, idx) => {
+            const isBondExpanded = expandedBond === bond.name;
+            return (
+            <div key={idx} style={{
+              background: '#ffffff',
+              border: '1px solid var(--border-glass)',
+              borderRadius: '16px',
+              padding: '1.25rem',
+              boxShadow: 'var(--shadow-sm)',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '1rem',
+              transition: 'all 0.2s',
+              cursor: 'pointer'
+            }} className="hover-bg-light"
+            onClick={() => setExpandedBond(isBondExpanded ? null : bond.name)}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                <div>
+                  <span style={{ fontSize: '1rem', fontWeight: 800, color: 'var(--text-main)', display: 'block', marginBottom: '0.2rem' }}>{bond.name}</span>
+                  <span style={{ fontSize: '0.72rem', color: 'var(--text-light)', fontWeight: 700, textTransform: 'uppercase', background: 'rgba(0,0,0,0.04)', padding: '0.15rem 0.4rem', borderRadius: '4px' }}>
+                    {bond.category}
+                  </span>
+                </div>
+                <div style={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'center',
+                  background: '#8b5cf6', 
+                  color: 'white', 
+                  fontWeight: 800, 
+                  fontSize: '0.8rem', 
+                  height: '32px', 
+                  width: '32px', 
+                  borderRadius: '50%' 
+                }}>
+                  {bond.score}
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+                <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--success)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <TrendingUp size={14} /> Expected: {bond.cagr}
+                </span>
+                <span style={{ fontSize: '0.75rem', fontWeight: 700, color: bond.risk.includes('High') ? 'var(--danger)' : bond.risk.includes('Moderate') ? '#fb923c' : 'var(--success)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <ShieldCheck size={14} /> Risk: {bond.risk}
+                </span>
+              </div>
+
+              <div style={{ background: '#f8fafc', borderRadius: '8px', padding: '0.85rem', marginTop: 'auto', fontSize: '0.8rem', color: 'var(--text-muted)', lineHeight: 1.5, fontWeight: 500, textAlign: 'center' }}>
+                {isBondExpanded ? (
+                  <div style={{ textAlign: 'left' }}>
+                    <strong style={{ color: 'var(--text-main)' }}>Thesis:</strong> {bond.thesis}
+                  </div>
+                ) : (
+                  <span style={{ color: '#8b5cf6', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
+                    <Landmark size={14} /> View Details
                   </span>
                 )}
               </div>

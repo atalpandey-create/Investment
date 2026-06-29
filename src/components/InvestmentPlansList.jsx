@@ -127,29 +127,29 @@ const InvestmentPlansList = () => {
           </h4>
           
           <PlanCard 
-            title="Parag Parikh Flexi Cap Fund"
-            category="Equity - Flexi Cap"
+            title="Quant Small Cap Fund"
+            category="Equity - Small Cap"
             risk="High Risk"
-            returnEstimate="13% - 15% p.a."
-            description="Invests across large, mid, and small-cap stocks, plus international equities. Excellent for long-term wealth creation (5+ years) with strong downside protection."
+            returnEstimate="20% - 25% p.a."
+            description="Aggressively managed small-cap fund with high growth potential. Ideal for long-term investors (7+ years) willing to tolerate significant market volatility."
             icon={<TrendingUp size={24} />}
           />
           
           <PlanCard 
-            title="Nippon India Large Cap Fund"
-            category="Equity - Large Cap"
+            title="Motilal Oswal Midcap Fund"
+            category="Equity - Mid Cap"
             risk="High Risk"
-            returnEstimate="12% - 13% p.a."
-            description="Focuses on top 100 established blue-chip companies. Offers relative stability within the equity space, ideal for conservative equity investors."
+            returnEstimate="18% - 22% p.a."
+            description="Focuses on high-quality mid-sized companies with strong competitive advantages. Offers excellent balance of growth and relative stability."
             icon={<Landmark size={24} />}
           />
 
           <PlanCard 
-            title="HDFC Balanced Advantage Fund"
-            category="Hybrid - Dynamic Asset Allocation"
-            risk="Moderate Risk"
-            returnEstimate="10% - 12% p.a."
-            description="Dynamically shifts between equity and debt based on market valuations. Best for investors who want equity exposure but fear market crashes."
+            title="Parag Parikh Flexi Cap Fund"
+            category="Equity - Flexi Cap"
+            risk="High Risk"
+            returnEstimate="14% - 16% p.a."
+            description="Invests across large, mid, and small-cap stocks, plus international equities. Excellent for long-term wealth creation (5+ years) with strong downside protection."
             icon={<Scale size={24} />}
           />
         </div>
@@ -161,10 +161,10 @@ const InvestmentPlansList = () => {
           </h4>
 
           <PlanCard 
-            title="Small Finance Banks (e.g., Unity, Suryoday)"
+            title="Small Finance Banks (e.g., Unity, Utkarsh)"
             category="Bank Fixed Deposit"
             risk="Low Risk"
-            returnEstimate="8.0% - 8.3% p.a."
+            returnEstimate="8.5% - 9.0% p.a."
             description="Offers the highest interest rates in the market. Highly safe for deposits up to ₹5 Lakhs due to DICGC (RBI) insurance coverage."
             icon={<Landmark size={24} />}
           />
@@ -173,7 +173,7 @@ const InvestmentPlansList = () => {
             title="Major Public/Private Banks (SBI, HDFC, ICICI)"
             category="Bank Fixed Deposit"
             risk="Low Risk"
-            returnEstimate="7.0% - 7.2% p.a."
+            returnEstimate="7.2% - 7.5% p.a."
             description="The safest possible investment avenues with massive institutional backing. Ideal for preserving capital and emergency funds."
             icon={<ShieldCheck size={24} />}
           />
@@ -182,7 +182,7 @@ const InvestmentPlansList = () => {
             title="Senior Citizen FDs"
             category="Special FD Scheme"
             risk="Low Risk"
-            returnEstimate="Up to 8.8% p.a."
+            returnEstimate="Up to 9.5% p.a."
             description="Banks offer an additional 0.50% to 0.75% premium for senior citizens. Super seniors (80+) get even higher rates. Great for retirement income."
             icon={<ShieldCheck size={24} />}
           />

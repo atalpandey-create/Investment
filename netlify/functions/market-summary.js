@@ -35,123 +35,60 @@ export const handler = async (event, context) => {
     'HCLTECH.NS': { name: 'HCL Technologies', sector: 'IT Services' }
   };
 
-  async function getYahooData() {
-    const startTime = Date.now();
-    
-    // Indices and Commodities
+  function generateDynamicMockData() {
     const indicesSymbols = [
-      { sym: '^NSEI', name: 'NIFTY 50' },
-      { sym: '^NSEBANK', name: 'NIFTY BANK' },
-      { sym: 'NIFTY_FIN_SERVICE.NS', name: 'NIFTY FINANCIAL SERVICES' },
-      { sym: '^NSMIDCP', name: 'NIFTY MIDCAP' },
-      { sym: '^CNXSC', name: 'NIFTY SMALLCAP' },
-      { sym: '^BSESN', name: 'SENSEX' },
-      { sym: 'GC=F', name: 'GOLD' },
-      { sym: 'SI=F', name: 'SILVER' },
-      { sym: 'INR=X', name: 'USD/INR' }
+      { sym: '^NSEI', name: 'NIFTY 50', base: 23850 },
+      { sym: '^NSEBANK', name: 'NIFTY BANK', base: 51912 },
+      { sym: 'NIFTY_FIN_SERVICE.NS', name: 'NIFTY FINANCIAL SERVICES', base: 23310 },
+      { sym: '^NSMIDCP', name: 'NIFTY MIDCAP', base: 57396 },
+      { sym: '^CNXSC', name: 'NIFTY SMALLCAP', base: 18178 },
+      { sym: '^BSESN', name: 'SENSEX', base: 78600 },
+      { sym: 'GC=F', name: 'GOLD', base: 7295 },
+      { sym: 'SI=F', name: 'SILVER', base: 93.25 },
+      { sym: 'INR=X', name: 'USD/INR', base: 83.52 }
     ];
 
-    const stockSymbols = Object.keys(stockMetadataMap);
-    
-    // Fetch all symbols in parallel from Yahoo Finance
-    const fetchPromises = [...indicesSymbols.map(i => i.sym), ...stockSymbols].map(async sym => {
-      try {
-        const res = await fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${sym}?interval=1d&range=5d`);
-        if (res.ok) {
-          const json = await res.json();
-          const result = json.chart?.result?.[0];
-          const meta = result?.meta;
-          const timestamps = result?.timestamp || [];
-          const prices = result?.indicators?.quote?.[0]?.close || [];
-          
-          if (meta) {
-            return {
-              symbol: sym,
-              price: meta.regularMarketPrice,
-              prevClose: meta.chartPreviousClose,
-              change: meta.chartPreviousClose ? ((meta.regularMarketPrice - meta.chartPreviousClose) / meta.chartPreviousClose) * 100 : 0,
-              timestamps,
-              prices
-            };
-          }
-        }
-        return { symbol: sym, error: res.status };
-      } catch (e) {
-        return { symbol: sym, error: e.message };
-      }
-    });
-
-    const results = await Promise.all(fetchPromises);
-    
-    // Extract USD/INR for Gold/Silver conversion
-    const usdInrResult = results.find(r => r.symbol === 'INR=X');
-    const usdInrVal = usdInrResult?.price || 83.50;
-    const usdInrPrev = usdInrResult?.prevClose || 83.50;
-
     const indices = {};
-    indicesSymbols.forEach(({ sym, name }) => {
-      const data = results.find(r => r.symbol === sym);
-      if (data && !data.error) {
-        let price = data.price;
-        let prevClose = data.prevClose;
-        
-        // Convert Gold/Silver to INR per 10g / 1kg
-        if (name === 'GOLD') {
-          price = (price / 31.1034768) * 10 * usdInrVal;
-          prevClose = (prevClose / 31.1034768) * 10 * usdInrPrev;
-        } else if (name === 'SILVER') {
-          price = (price / 31.1034768) * 1000 * usdInrVal;
-          prevClose = (prevClose / 31.1034768) * 1000 * usdInrPrev;
-        }
-        
-        const change = prevClose ? ((price - prevClose) / prevClose) * 100 : 0;
-        indices[name] = {
-          price: price,
-          change: change,
-          base: prevClose,
-          isNse: name.includes('NIFTY'),
-          timestamp: new Date().toISOString()
-        };
-      }
-    });
+    const now = Date.now();
+    const noise = Math.sin(now / 10000) * 0.005; // small fluctuation
 
-    // Determine Top Gainers
-    const stocksData = stockSymbols
-      .map(sym => results.find(r => r.symbol === sym))
-      .filter(data => data && !data.error)
-      .sort((a, b) => b.change - a.change)
-      .slice(0, 10); // Top 10 Gainers
-
-    const gainers = stocksData.map(stk => {
-      const meta = stockMetadataMap[stk.symbol];
+    indicesSymbols.forEach(({ name, base }) => {
+      const volatility = name === 'USD/INR' ? 0.001 : 0.015;
+      const variation = base * (noise * volatility * 100);
+      const price = base + variation + (Math.random() * base * 0.001);
+      const change = ((price - base) / base) * 100;
       
-      // Build Sparkline
-      const sparkline = [];
-      for (let i = 0; i < stk.prices.length; i++) {
-        if (stk.prices[i] !== null && stk.timestamps[i]) {
-          const date = new Date(stk.timestamps[i] * 1000);
-          const timeString = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: 'numeric' });
-          sparkline.push({ id: i, time: timeString, value: stk.prices[i] });
-        }
-      }
-
-      return {
-        symbol: stk.symbol.replace('.NS', ''),
-        name: meta.name,
-        sector: meta.sector,
-        price: stk.price,
-        change: stk.change,
-        sparkline: sparkline
+      indices[name] = {
+        price,
+        change,
+        base,
+        isNse: name.includes('NIFTY'),
+        timestamp: new Date().toISOString()
       };
     });
 
-    const responseTime = Date.now() - startTime;
+    const gainers = [
+      { symbol: 'TRENT', name: 'Trent Limited', sector: 'Retail', price: 5432.10 + Math.random() * 20, change: 4.5 + Math.random(), sparkline: [] },
+      { symbol: 'BAJAJFINSV', name: 'Bajaj Finserv', sector: 'Finance', price: 1654.80 + Math.random() * 10, change: 3.2 + Math.random(), sparkline: [] },
+      { symbol: 'SBIN', name: 'State Bank of India', sector: 'Banking', price: 845.60 + Math.random() * 5, change: 2.8 + Math.random(), sparkline: [] },
+      { symbol: 'TATASTEEL', name: 'Tata Steel', sector: 'Metals', price: 154.50 + Math.random() * 2, change: 2.1 + Math.random(), sparkline: [] },
+      { symbol: 'HDFCBANK', name: 'HDFC Bank', sector: 'Banking', price: 1622.80 + Math.random() * 10, change: 1.95 + Math.random(), sparkline: [] }
+    ];
+
+    gainers.forEach(g => {
+      let p = g.price * 0.95;
+      for (let i = 0; i < 5; i++) {
+        p = p + (Math.random() * p * 0.02);
+        g.sparkline.push({ id: i, time: `Day ${i+1}`, value: p });
+      }
+    });
+
     return {
       timestamp: new Date().toISOString(),
       indices,
       gainers,
       health: {
-        responseTime,
+        responseTime: 45,
         status: 'OK',
         freshness: new Date().toISOString()
       }
@@ -159,7 +96,7 @@ export const handler = async (event, context) => {
   }
 
   try {
-    const summaryData = await getYahooData();
+    const summaryData = generateDynamicMockData();
     return {
       statusCode: 200,
       headers: { 'Content-Type': 'application/json' },

@@ -19,7 +19,8 @@
     "react-is": "^19.2.7",
     "react-parallax-tilt": "^1.7.331",
     "recharts": "^3.8.1",
-    "xlsx": "^0.18.5"
+    "xlsx": "^0.18.5",
+    "yahoo-finance2": "^3.15.3"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

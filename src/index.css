@@ -442,6 +442,201 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .skeleton-title {
+  gap: 0.25rem;
+}
+
+/* 3D Visual Asset Keyframes and Classes */
+@keyframes float3D {
+  0% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-8px) rotate(2deg); }
+  100% { transform: translateY(0px) rotate(0deg); }
+}
+
+.float-3d {
+  animation: float3D 6s ease-in-out infinite;
+}
+
+/* 3D Rotating Gold Coin */
+.coin-3d {
+  width: 48px;
+  height: 48px;
+  background: linear-gradient(135deg, #ffd700 0%, #ffa500 100%);
+  border-radius: 50%;
+  box-shadow: 
+    0 4px 10px rgba(255, 165, 0, 0.4),
+    inset 0 2px 4px rgba(255, 255, 255, 0.6),
+    inset 0 -2px 4px rgba(0, 0, 0, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  transform-style: preserve-3d;
+  animation: spinCoin 8s linear infinite, float3D 5s ease-in-out infinite alternate;
+}
+
+@keyframes spinCoin {
+  0% { transform: rotateY(0deg); }
+  100% { transform: rotateY(360deg); }
+}
+
+.coin-3d::after {
+  content: '₹';
+  color: #ffffff;
+  font-weight: 800;
+  font-size: 1.5rem;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+/* 3D Rotating Cube */
+.cube-wrapper {
+  perspective: 400px;
+  width: 50px;
+  height: 50px;
+  animation: float3D 7s ease-in-out infinite;
+}
+
+.cube-3d {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  transform-style: preserve-3d;
+  animation: rotateCube 12s linear infinite;
+}
+
+@keyframes rotateCube {
+  0% { transform: rotateX(0deg) rotateY(0deg); }
+  100% { transform: rotateX(360deg) rotateY(360deg); }
+}
+
+.cube-face {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background: rgba(37, 99, 235, 0.15);
+  border: 1.5px solid var(--primary);
+  border-radius: 6px;
+  backdrop-filter: blur(2px);
+}
+
+.cube-front  { transform: rotateY(0deg) translateZ(25px); }
+.cube-back   { transform: rotateY(180deg) translateZ(25px); }
+.cube-right  { transform: rotateY(90deg) translateZ(25px); }
+.cube-left   { transform: rotateY(-90deg) translateZ(25px); }
+.cube-top    { transform: rotateX(90deg) translateZ(25px); }
+.cube-bottom { transform: rotateX(-90deg) translateZ(25px); }
+
+/* Floating Particle lights */
+.floating-particle {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--primary);
+  opacity: 0.12;
+  pointer-events: none;
+  animation: floatParticle 10s linear infinite;
+}
+
+@keyframes floatParticle {
+  0% { transform: translateY(120%) translateX(0); opacity: 0; }
+  10% { opacity: 0.15; }
+  90% { opacity: 0.15; }
+  100% { transform: translateY(-20%) translateX(30px); opacity: 0; }
+}
+
+/* Standard Toast Alerts */
+.alert-toast {
+  animation: slideInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  z-index: 10000;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--border-glass);
+  border-left: 5px solid var(--primary);
+  box-shadow: var(--shadow-lg), 0 10px 40px rgba(0,0,0,0.1);
+  border-radius: var(--radius-md);
+  padding: 1.25rem;
+  color: var(--text-main);
+  max-width: 350px;
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+}
+
+/* Interactive custom scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.08);
+  border-radius: 100px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.15);
+}
+
+/* Common Animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes priceFlashGreen {
+  0% { background: rgba(5, 150, 105, 0.15); }
+  100% { background: transparent; }
+}
+
+@keyframes priceFlashRed {
+  0% { background: rgba(225, 29, 72, 0.15); }
+  100% { background: transparent; }
+}
+
+.flash-up {
+  animation: priceFlashGreen 0.8s ease-out;
+}
+
+.flash-down {
+  animation: priceFlashRed 0.8s ease-out;
+}
+
+/* Skeleton Loader utility */
+@keyframes skeleton-pulse {
+  0% {
+    background-color: rgba(0, 0, 0, 0.04);
+  }
+  50% {
+    background-color: rgba(0, 0, 0, 0.08);
+  }
+  100% {
+    background-color: rgba(0, 0, 0, 0.04);
+  }
+}
+
+.skeleton {
+  animation: skeleton-pulse 1.5s ease-in-out infinite;
+  border-radius: 8px;
+}
+
+.skeleton-text {
+  height: 12px;
+  width: 100%;
+  border-radius: 4px;
+}
+
+.skeleton-title {
   height: 18px;
   width: 60%;
   border-radius: 4px;
@@ -451,3 +646,6 @@ h1, h2, h3, h4, h5, h6 {
   height: 160px;
   border-radius: 24px;
 }
+
+.spin { animation: spin 1s linear infinite; }
+@keyframes spin { 100% { transform: rotate(360deg); } }

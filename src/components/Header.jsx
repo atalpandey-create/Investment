@@ -1,5 +1,5 @@
 import React from 'react';
-import { Activity, Sparkles, PieChart, Calculator, Bell, ShieldAlert } from 'lucide-react';
+import { Activity, Sparkles, PieChart, Calculator, Bell, ShieldAlert, Landmark } from 'lucide-react';
 
 const Header = ({ activeTab, setActiveTab, topGainers, marketError, marketLoading, user, onLogout }) => {
   const renderMarqueeList = (isDup = false) => {
@@ -194,6 +194,13 @@ const Header = ({ activeTab, setActiveTab, topGainers, marketError, marketLoadin
             >
               <PieChart size={14} />
               Portfolio
+            </button>
+            <button 
+              className={`nav-tab-button ${activeTab === 'bonds' ? 'active' : ''}`}
+              onClick={() => setActiveTab('bonds')}
+            >
+              <Landmark size={14} />
+              Bonds
             </button>
             <button 
               className={`nav-tab-button ${activeTab === 'alerts' ? 'active' : ''}`}

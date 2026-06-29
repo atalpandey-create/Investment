@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Sparkles, ArrowRight, ShieldCheck, Flame, Scale, Landmark, Coins, TrendingUp } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Sparkles, ArrowRight, ShieldCheck, Flame, Scale, Landmark, Coins, TrendingUp, Search, RefreshCw, Globe } from 'lucide-react';
 
 const mockRecommendations = {
   stocks: [
@@ -303,6 +303,82 @@ const mockRecommendations = {
 
 const AiRecommendations = ({ onSelectPreset }) => {
   const [selectedSubTab, setSelectedSubTab] = useState('stocks');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [externalResults, setExternalResults] = useState([]);
+  const [isSearching, setIsSearching] = useState(false);
+
+  useEffect(() => {
+    if (searchQuery.trim().length < 2) {
+      setExternalResults([]);
+      return;
+    }
+
+    const timer = setTimeout(async () => {
+      setIsSearching(true);
+      try {
+        const res = await fetch(`/api/search-asset?q=${encodeURIComponent(searchQuery)}`);
+        if (res.ok) {
+          const data = await res.json();
+          
+          const formatted = data.map(quote => {
+            let risk = 'Moderate Risk';
+            let cagr = '10% - 15%';
+            let allocation = quote.type === 'ETF' ? 'Exchange Traded Fund' : (quote.type === 'MUTUALFUND' ? 'Mutual Fund' : 'Equity');
+            let preset = { lumpsum: 10000, sip: 2000, rate: 12, years: 10 };
+
+            if (quote.type === 'EQUITY') {
+              risk = 'High Risk';
+              cagr = '15% - 20%';
+            } else if (quote.type === 'MUTUALFUND') {
+              risk = 'Moderate Risk';
+              cagr = '12% - 15%';
+            }
+
+            return {
+              name: quote.name,
+              ticker: quote.ticker,
+              risk: risk,
+              cagr: cagr,
+              thesis: `AI analysis highlights ${quote.name} (${quote.ticker}) as a dynamically discovered asset on ${quote.exchange}. Quantitative signals suggest monitoring this asset for emerging trends.`,
+              allocation: allocation,
+              preset: preset,
+              isExternal: true
+            };
+          });
+          setExternalResults(formatted);
+        }
+      } catch (err) {
+        console.error('Search error:', err);
+      } finally {
+        setIsSearching(false);
+      }
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  let displayedRecommendations = [];
+  if (searchQuery.trim().length > 0) {
+    const lowerQuery = searchQuery.toLowerCase();
+    Object.keys(mockRecommendations).forEach(category => {
+      mockRecommendations[category].forEach(rec => {
+        if (rec.name.toLowerCase().includes(lowerQuery) || rec.ticker.toLowerCase().includes(lowerQuery)) {
+          displayedRecommendations.push(rec);
+        }
+      });
+    });
+
+    // Append external results that aren't already in local mock
+    const localTickers = new Set(displayedRecommendations.map(r => r.ticker));
+    externalResults.forEach(ext => {
+      if (!localTickers.has(ext.ticker)) {
+        displayedRecommendations.push(ext);
+      }
+    });
+
+  } else {
+    displayedRecommendations = mockRecommendations[selectedSubTab];
+  }
 
   const getRiskIcon = (risk) => {
     if (risk.includes('Low')) return <ShieldCheck size={16} color="var(--success)" />;
@@ -331,7 +407,7 @@ const AiRecommendations = ({ onSelectPreset }) => {
     <div className="wealth-card animate-fade-in" style={{ padding: '2.25rem' }}>
       
       {/* Tab bar header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1.25rem', marginBottom: '2rem' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1.25rem', marginBottom: '2rem' }}>
         <div>
           <h3 style={{ fontSize: '1.3rem', color: 'var(--text-main)', margin: 0, display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
             <Sparkles color="var(--primary)" className="float-3d" />
@@ -342,15 +418,42 @@ const AiRecommendations = ({ onSelectPreset }) => {
           </p>
         </div>
 
-        {/* Sub Navigation controls */}
-        <div style={{
-          display: 'flex',
-          gap: '0.25rem',
-          background: 'rgba(0,0,0,0.03)',
-          padding: '0.3rem',
-          borderRadius: '100px',
-          flexWrap: 'wrap'
-        }}>
+        {/* Controls Container */}
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '1rem', width: '100%', maxWidth: '450px' }}>
+          
+          {/* Search Bar */}
+          <div style={{ position: 'relative', width: '100%' }}>
+            <Search size={16} color="var(--text-muted)" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)' }} />
+            <input 
+              type="text"
+              placeholder="Search stocks, funds, bonds, ETFs..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              style={{
+                width: '100%',
+                padding: '0.65rem 1rem 0.65rem 2.2rem',
+                borderRadius: '100px',
+                border: '1px solid rgba(0,0,0,0.08)',
+                background: 'rgba(255,255,255,0.8)',
+                fontSize: '0.85rem',
+                color: 'var(--text-main)',
+                outline: 'none',
+                boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.02)',
+                boxSizing: 'border-box'
+              }}
+            />
+          </div>
+
+          {/* Sub Navigation controls */}
+          <div style={{
+            display: 'flex',
+            gap: '0.25rem',
+            background: 'rgba(0,0,0,0.03)',
+            padding: '0.3rem',
+            borderRadius: '100px',
+            flexWrap: 'wrap',
+            justifyContent: 'flex-end'
+          }}>
           {Object.keys(mockRecommendations).map(tab => (
             <button
               key={tab}
@@ -378,10 +481,20 @@ const AiRecommendations = ({ onSelectPreset }) => {
           ))}
         </div>
       </div>
+    </div>
 
       {/* Recommendations Cards listing */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))', gap: '1.5rem' }}>
-        {mockRecommendations[selectedSubTab].map((rec, index) => (
+        {isSearching && displayedRecommendations.length === 0 ? (
+          <div style={{ gridColumn: '1 / -1', padding: '3rem', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.9rem' }}>
+            <RefreshCw size={24} className="spin" style={{ margin: '0 auto 1rem', display: 'block', color: 'var(--primary)' }} />
+            Searching global markets for "{searchQuery}"...
+          </div>
+        ) : displayedRecommendations.length === 0 ? (
+          <div style={{ gridColumn: '1 / -1', padding: '3rem', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.9rem' }}>
+            No recommendations found matching "{searchQuery}"
+          </div>
+        ) : displayedRecommendations.map((rec, index) => (
           <div
             key={index}
             style={{
@@ -401,8 +514,12 @@ const AiRecommendations = ({ onSelectPreset }) => {
                   fontSize: '0.72rem', 
                   fontWeight: 800, 
                   color: 'var(--text-light)',
-                  textTransform: 'uppercase'
+                  textTransform: 'uppercase',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.35rem'
                 }}>
+                  {rec.isExternal && <Globe size={12} color="var(--primary)" />}
                   {rec.allocation}
                 </span>
                 <div style={{ 
